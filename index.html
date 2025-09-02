@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submit Your Data</title>
+    <style>
+        /* General reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f7fa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            flex-direction: column;
+            padding: 20px;
+        }
+
+        h2 {
+            font-size: 2.5em;
+            color: #333;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        form {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            width: 100%;
+            max-width: 450px;
+        }
+
+        label {
+            font-size: 1.1em;
+            margin-bottom: 8px;
+            display: block;
+            color: #555;
+        }
+
+        input[type="text"],
+        input[type="number"] {
+            width: 100%;
+            padding: 14px;
+            margin: 10px 0 20px 0;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1.1em;
+            transition: border-color 0.3s ease;
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus {
+            border-color: #4CAF50;
+            outline: none;
+        }
+
+        button {
+            width: 100%;
+            padding: 16px;
+            font-size: 1.1em;
+            background-color: #000000;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        button:hover {
+            background-color: #ffb3f5;
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        #dataList {
+            margin-top: 40px;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .data-item {
+            background: #000000;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease;
+        }
+
+        .data-item:hover {
+            transform: translateY(-5px);
+        }
+
+        .data-item p {
+            margin: 5px 0;
+            color: #ffb3f5;
+        }
+
+        @media (max-width: 768px) {
+            h2 {
+                font-size: 2em;
+            }
+
+            form {
+                padding: 20px;
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<h2>Submit Your Data</h2>
+
+<form id="dataForm">
+    <label for="name">Name:</label>
+    <input type="text" id="name" name="name" placeholder="Enter your name" required>
+
+    <label for="score">Score:</label>
+    <input type="number" id="score" name="score" placeholder="Enter your score" required>
+
+    <button type="button" id="saveBtn">Save Data</button>
+    <button type="button" id="loadBtn">Load Data</button>
+</form>
+
+<div id="dataList"></div>
+
+<script>
+    const scriptURL = "https://script.google.com/macros/s/AKfycbwm3UHg0XeVCXrtntzgPP7-trzoYgYreFLmcWaHhkG79_eSL27yxkSLP7PM_pCHNFsa/exec";
+
+    // Save data to Google Sheets
+    document.getElementById("saveBtn").addEventListener("click", () => {
+        const name = document.getElementById("name").value.trim();
+        const score = document.getElementById("score").value.trim();
+
+        if (name && !isNaN(score)) {
+            const payload = { name: name, score: Number(score) };
+
+            fetch(scriptURL, {
+                method: "POST",
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.text())
+            .then(msg => {
+                alert(msg);
+                document.getElementById("dataForm").reset();
+            })
+            .catch(err => {
+                console.error("Error:", err);
+                alert("Failed to save data.");
+            });
+        } else {
+            alert("Please enter a valid name and numeric score.");
+        }
+    });
+
+    // Load data from Google Sheets
+    document.getElementById("loadBtn").addEventListener("click", () => {
+        const dataList = document.getElementById("dataList");
+        dataList.innerHTML = '<p>Loading data...</p>';
+
+        fetch(scriptURL + "?action=load")
+            .then(res => res.json())
+            .then(data => {
+                dataList.innerHTML = ''; // Clear existing data
+                data.forEach(item => {
+                    const div = document.createElement('div');
+                    div.classList.add('data-item');
+                    div.innerHTML = `
+                        <p><strong>Name:</strong> ${item.name}</p>
+                        <p><strong>Score:</strong> ${item.score}</p>
+                        <p><strong>Date:</strong> ${item.date}</p>
+                    `;
+                    dataList.appendChild(div);
+                });
+            })
+            .catch(err => {
+                console.error("Error:", err);
+                dataList.innerHTML = '<p>Error loading data.</p>';
+            });
+    });
+</script>
+
+</body>
+</html>
